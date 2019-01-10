@@ -4,8 +4,16 @@ import os
 import json
 import spacy
 import html
+import re
+import string
 
 indir = '/u/cs401/A1/data/';
+
+with open("/u/cs401/Wordlists/abbrev.english") as file:
+    abbreviation_list = set(file.read().lower().splitlines())
+abbreviation_list.add("i.e.")
+abbreviation_list.add("e.g.")
+#print(abbreviation_list)
 
 def preproc1( comment , steps=range(1,11)):
     ''' This function pre-processes a single comment
@@ -21,24 +29,55 @@ def preproc1( comment , steps=range(1,11)):
     modComm = ''
     if 1 in steps:
         #remove new line characters
-        modComm = modComm.replace("\n", " ").replace("\r", " ")
+        modComm = comment.replace("\n", " ").replace("\r", " ")
     if 2 in steps:
         #should convert all according to reference: https://docs.python.org/3/library/html.html
         modComm = html.unescape(modComm)
     if 3 in steps:
+        #matches http(s):// or www as required
         modComm = re.sub(r"((http[s]?:\/\/)|(www\.))+\S*","",modComm)
     if 4 in steps:
-        print('TODO')
+        tokens = re.split("\s+", modComm)
+        tokens_mod = []
+
+        for word in tokens:
+
+            #case 2
+            if(word.lower() in abbreviation_list):
+                tokens_mod.append(word)
+            elif(re.search(r"[\!\"\#\$\%\&\(\)\*\+\,\-\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}~]+", word) != None):
+                #case 1, 3, 4
+                match = re.search(r"[\!\"\#\$\%\&\(\)\*\+\,\-\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}~]+", word)
+                if(match != None):
+                    part1 = word[:match.start()]
+                    part2 = word[match.start():match.end()]
+                    part3 = word[match.end():]
+
+                    if (part1 != ""):
+                        tokens_mod.append(part1)
+
+                    tokens_mod.append(part2)
+
+                    if(part3 != ""):
+                        tokens_mod.append(part3)
+            else:
+                tokens_mod.append(word)
+
+        modComm = " ".join(tokens_mod)
     if 5 in steps:
-        print('TODO')
+        modComm = modComm
     if 6 in steps:
-        print('TODO')
+        modComm = modComm
+
     if 7 in steps:
-        print('TODO')
+        modComm = modComm
+
     if 8 in steps:
-        print('TODO')
+        modComm = modComm
+
     if 9 in steps:
-        print('TODO')
+        modComm = modComm
+
     if 10 in steps:
        modComm = modComm.lower()
 
@@ -75,7 +114,7 @@ def main( args ):
                     j = json.loads(line)
                     j = {'id':j['id'], 'body':j['body']}
                     j['cat'] = fullFile.split('/')[-1]
-                    #j['body'] = preproc1(j['body'])
+                    j['body'] = preproc1(j['body'])
                     allOutput.append(j)
                     count+=1
 
