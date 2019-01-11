@@ -13,7 +13,8 @@ with open("/u/cs401/Wordlists/abbrev.english") as file:
     abbreviation_list = set(file.read().lower().splitlines())
 abbreviation_list.add("i.e.")
 abbreviation_list.add("e.g.")
-#print(abbreviation_list)
+
+clitics_list = {"'d", "'n", "'ve", "'re", "'ll", "'m", "'re", "'s", "'t"}
 
 def preproc1( comment , steps=range(1,11)):
     ''' This function pre-processes a single comment
@@ -42,13 +43,13 @@ def preproc1( comment , steps=range(1,11)):
 
         for word in tokens:
 
-            #case 2
+            #case 2: keeping the periods in abbreviations
             if(word.lower() in abbreviation_list):
                 tokens_mod.append(word)
-            elif(re.search(r"[\!\"\#\$\%\&\(\)\*\+\,\-\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}~]+", word) != None):
-                #case 1, 3, 4
+            elif(re.search(r"[\!\"\#\$\%\&\(\)\*\+\,\-\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}~]+", word) is not None):
+                #case 1, 3, 4: not matching apostrophes, keeping multiple punctuation together, and splitting hyphens (my choice)
                 match = re.search(r"[\!\"\#\$\%\&\(\)\*\+\,\-\.\/\:\;\<\=\>\?\@\[\\\]\^\_\`\{\|\}~]+", word)
-                if(match != None):
+                if(match is not None):
                     part1 = word[:match.start()]
                     part2 = word[match.start():match.end()]
                     part3 = word[match.end():]
@@ -65,7 +66,32 @@ def preproc1( comment , steps=range(1,11)):
 
         modComm = " ".join(tokens_mod)
     if 5 in steps:
-        modComm = modComm
+        tokens = re.split("\s+", modComm)
+        tokens_mod = []
+
+        #deal with common case given clitics list
+        for i in clitics_list:
+            count = modComm.count(i)
+            curr_index = 0
+
+            #avoid finding the same clitic multiple times
+            while count > 0:
+                ind = modComm.find(i, curr_index)
+                modComm = modComm[:ind] + " " + modComm[ind:]
+                curr_index = ind + len(i)
+                count -= 1
+
+        #deal with the plural possessive case (s')
+        for word in tokens:
+            if(word.find("s'") != -1):
+                ind = word.find("s'")
+                tokens_mod.append(word[:ind+1])
+                tokens_mod.append(word[ind+1:])
+            else:
+                tokens_mod.append(word)
+
+        modComm = " ".join(tokens_mod)
+
     if 6 in steps:
         modComm = modComm
 
