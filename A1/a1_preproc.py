@@ -15,6 +15,9 @@ abbreviation_list.add("i.e.")
 abbreviation_list.add("e.g.")
 
 clitics_list = {"'d", "'n", "'ve", "'re", "'ll", "'m", "'re", "'s", "'t"}
+clitics_list_first = {"s'", "t'", "y'"}
+
+nlp = spacy.load('en', disable=['parser', 'ner'])
 
 def preproc1( comment , steps=range(1,11)):
     ''' This function pre-processes a single comment
@@ -81,19 +84,30 @@ def preproc1( comment , steps=range(1,11)):
                 curr_index = ind + len(i)
                 count -= 1
 
-        #deal with the plural possessive case (s')
-        for word in tokens:
-            if(word.find("s'") != -1):
-                ind = word.find("s'")
-                tokens_mod.append(word[:ind+1])
-                tokens_mod.append(word[ind+1:])
-            else:
-                tokens_mod.append(word)
+        for i in clitics_list_first:
+            count = modComm.count(i)
+            curr_index = 0
 
-        modComm = " ".join(tokens_mod)
+            while count > 0:
+                ind = modComm.find(i, curr_index)
+                #print("found: "+ modComm[ind+1])
+                #print(modComm[:ind+1] + " " + modComm[ind+1:])
+                modComm = modComm[:ind+1] + " " + modComm[ind+1:]
+                curr_index = ind + len(i)
+                count -= 1
+
+
+        #modComm = " ".join(tokens_mod)
 
     if 6 in steps:
-        modComm = modComm
+        utt = nlp(modComm)
+
+        tokens_mod = []
+        for word in utt:
+            tagged_word = "{0}/{1}".format(word, word.tag_)
+            tokens_mod.append(tagged_word)
+
+        modComm = " ".join(tokens_mod)
 
     if 7 in steps:
         modComm = modComm
@@ -119,14 +133,8 @@ def main( args ):
 
             data = json.load(open(fullFile))
 
-            # TODO: select appropriate args.max lines
-            # TODO: read those lines with something like `j = json.loads(line)`
-            # TODO: choose to retain fields from those lines that are relevant to you
-            # TODO: add a field to each selected line called 'cat' with the value of 'file' (e.g., 'Alt', 'Right', ...)
-            # TODO: process the body field (j['body']) with preproc1(...) using default for `steps` argument
-            # TODO: replace the 'body' field with the processed text
-            # TODO: append the result to 'allOutput'
             print("num lines: " + str(len(data)))
+            #select appropriate args.max lines
             start = args.ID[0]%len(data)
             end = min(len(data), start+args.max)
             count = 0
@@ -135,12 +143,18 @@ def main( args ):
 
                 print("starting point: "+str(start))
                 print("ending point: " +str(end))
+                #read those lines with something like `j = json.loads(line)`
                 for i in range(start, end):
                     line = data[i]
                     j = json.loads(line)
+                    #choose to retain fields from those lines that are relevant to you
                     j = {'id':j['id'], 'body':j['body']}
+                    #add a field to each selected line called 'cat' with the value of 'file' (e.g., 'Alt', 'Right', ...)
                     j['cat'] = fullFile.split('/')[-1]
+                    #process the body field (j['body']) with preproc1(...) using default for `steps` argument
+                    #replace the 'body' field with the processed text
                     j['body'] = preproc1(j['body'])
+                    #append the result to 'allOutput'
                     allOutput.append(j)
                     count+=1
 
@@ -161,7 +175,8 @@ if __name__ == "__main__":
     parser.add_argument('ID', metavar='N', type=int, nargs=1,
                         help='your student ID')
     parser.add_argument("-o", "--output", help="Directs the output to a filename of your choice", required=True)
-    parser.add_argument("--max", help="The maximum number of comments to read from each file", default=10000)
+    #TODO:CHANGE BACK TO 10000
+    parser.add_argument("--max", help="The maximum number of comments to read from each file", default=10)
     args = parser.parse_args()
 
     if (args.max > 200272):
