@@ -17,6 +17,10 @@ abbreviation_list.add("e.g.")
 clitics_list = {"'d", "'n", "'ve", "'re", "'ll", "'m", "'re", "'s", "'t"}
 clitics_list_first = {"s'", "t'", "y'"}
 
+
+with open("/u/cs401/Wordlists/StopWords") as file:
+    stopword_list = set(file.read().lower().splitlines())
+
 nlp = spacy.load('en', disable=['parser', 'ner'])
 
 def preproc1( comment , steps=range(1,11)):
@@ -69,9 +73,6 @@ def preproc1( comment , steps=range(1,11)):
 
         modComm = " ".join(tokens_mod)
     if 5 in steps:
-        tokens = re.split("\s+", modComm)
-        tokens_mod = []
-
         #deal with common case given clitics list
         for i in clitics_list:
             count = modComm.count(i)
@@ -96,9 +97,6 @@ def preproc1( comment , steps=range(1,11)):
                 curr_index = ind + len(i)
                 count -= 1
 
-
-        #modComm = " ".join(tokens_mod)
-
     if 6 in steps:
         utt = nlp(modComm)
 
@@ -110,10 +108,37 @@ def preproc1( comment , steps=range(1,11)):
         modComm = " ".join(tokens_mod)
 
     if 7 in steps:
-        modComm = modComm
+
+        tokens = re.split("\s+", modComm)
+        tokens_mod = []
+
+        #split tokens and only add back the ones that aren't in stoplist
+        for word in tokens:
+            index = word.rfind("/")
+            if(word[:index] not in stopword_list):
+                tokens_mod.append(word)
+
+        modComm = " ".join(tokens_mod)
 
     if 8 in steps:
-        modComm = modComm
+        tokens = re.split("\s+", modComm)
+        tokens_mod = []
+
+        #get the token and tag and lemmatize it
+        #if it doesn't match requirements, use old version
+        for word in tokens:
+            index = word.rfind("/")
+            token = word[:index]
+            tag = word[index:]
+            utt = nlp(token)
+
+            for i in utt:
+                if(token[0] != "-" and i.lemma_[0] == "-"):
+                    tokens_mod.append("{0}/{1}".format(i.lemma_, tag))
+                else:
+                    tokens_mod.append(word)
+
+        modComm = " ".join(tokens_mod)
 
     if 9 in steps:
         modComm = modComm
