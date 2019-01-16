@@ -21,6 +21,8 @@ clitics_list_first = {"s'", "t'", "y'"}
 with open("/u/cs401/Wordlists/StopWords") as file:
     stopword_list = set(file.read().lower().splitlines())
 
+ending_punctuation_list = {".", "!", "?"}
+
 nlp = spacy.load('en', disable=['parser', 'ner'])
 
 def preproc1( comment , steps=range(1,11)):
@@ -141,10 +143,32 @@ def preproc1( comment , steps=range(1,11)):
         modComm = " ".join(tokens_mod)
 
     if 9 in steps:
-        modComm = modComm
+        #using sentence boundary as described in 4.2.4
+        tokens = re.split("\s+", modComm)
+        tokens_mod = []
+
+        for i in range(len(tokens)):
+            index = tokens[i].rfind("/")
+            token = tokens[i][:index].lower()
+            if not token:
+                continue
+
+            if(i<len(tokens)-1):
+                index_next = tokens[i+1].rfind("/")
+                token_next = tokens[i+1][:index_next]
+            #known abreviation not sentence
+            if(token[-1] in ending_punctuation_list and token not in abbreviation_list):
+                tokens_mod.append(tokens[i]+"\n")
+            #end of punctuation, but next word isn't capitalized
+            elif(i<len(tokens)-1 and token[-1] in ending_punctuation_list and token_next[0].islower()):
+                tokens_mod.append(tokens[i]+"\n")
+            else:
+                tokens_mod.append(tokens[i])
+
+        modComm = " ".join(tokens_mod)
 
     if 10 in steps:
-       modComm = modComm.lower()
+        modComm = modComm.lower()
 
     return modComm
 
@@ -201,7 +225,7 @@ if __name__ == "__main__":
                         help='your student ID')
     parser.add_argument("-o", "--output", help="Directs the output to a filename of your choice", required=True)
     #TODO:CHANGE BACK TO 10000
-    parser.add_argument("--max", help="The maximum number of comments to read from each file", default=10)
+    parser.add_argument("--max", type=int, help="The maximum number of comments to read from each file", default=200)
     args = parser.parse_args()
 
     if (args.max > 200272):
