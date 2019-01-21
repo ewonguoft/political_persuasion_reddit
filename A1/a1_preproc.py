@@ -116,9 +116,9 @@ def preproc1( comment , steps=range(1,11)):
 
             for i in utt:
                 if(token[0] != "-" and i.lemma_[0] == "-"):
-                    tokens_mod.append("{0}/{1}".format(i.lemma_, tag))
-                else:
                     tokens_mod.append(word)
+                else:
+                    tokens_mod.append("{0}/{1}".format(i.lemma_, tag))
 
         modComm = " ".join(tokens_mod)
 
