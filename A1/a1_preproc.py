@@ -148,7 +148,7 @@ def preproc1( comment , steps=range(1,11)):
         modComm = " ".join(tokens_mod)
 
     if 10 in steps:
-        modComm = modComm.lower()
+        modComm = re.sub(r"(\S+)\/(\S+)", lambda pattern: pattern.group(1).lower() + "/" + pattern.group(2), modComm)
 
     return modComm
 
@@ -205,7 +205,7 @@ if __name__ == "__main__":
                         help='your student ID')
     parser.add_argument("-o", "--output", help="Directs the output to a filename of your choice", required=True)
     #TODO:CHANGE BACK TO 10000
-    parser.add_argument("--max", type=int, help="The maximum number of comments to read from each file", default=10000)
+    parser.add_argument("--max", type=int, help="The maximum number of comments to read from each file", default=100)
     args = parser.parse_args()
 
     if (args.max > 200272):
