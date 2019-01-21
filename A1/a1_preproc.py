@@ -14,9 +14,6 @@ with open("/u/cs401/Wordlists/abbrev.english") as file:
 abbreviation_list.add("i.e.")
 abbreviation_list.add("e.g.")
 
-clitics_list = {"'d", "'n", "'ve", "'re", "'ll", "'m", "'re", "'s", "'t"}
-clitics_list_first = {"s'", "t'", "y'"}
-
 
 with open("/u/cs401/Wordlists/StopWords") as file:
     stopword_list = set(file.read().lower().splitlines())
@@ -76,28 +73,11 @@ def preproc1( comment , steps=range(1,11)):
         modComm = " ".join(tokens_mod)
     if 5 in steps:
         #deal with common case given clitics list
-        for i in clitics_list:
-            count = modComm.count(i)
-            curr_index = 0
+        modComm = re.sub(r"(\w)('d|n't|'ve|'re|'ll|'m|'s)", r"\1 \2 ", modComm, flags=re.IGNORECASE)
 
-            #avoid finding the same clitic multiple times
-            while count > 0:
-                ind = modComm.find(i, curr_index)
-                modComm = modComm[:ind] + " " + modComm[ind:]
-                curr_index = ind + len(i)
-                count -= 1
-
-        for i in clitics_list_first:
-            count = modComm.count(i)
-            curr_index = 0
-
-            while count > 0:
-                ind = modComm.find(i, curr_index)
-                #print("found: "+ modComm[ind+1])
-                #print(modComm[:ind+1] + " " + modComm[ind+1:])
-                modComm = modComm[:ind+1] + " " + modComm[ind+1:]
-                curr_index = ind + len(i)
-                count -= 1
+        #deal with special cases
+        modComm = re.sub(r"s' ", r"s ' ", modComm, flags=re.IGNORECASE)
+        modComm = re.sub(r"(y|Y)'(\w)", r"y '\2", modComm, flags=re.IGNORECASE)
 
     if 6 in steps:
         utt = nlp(modComm)
@@ -225,7 +205,7 @@ if __name__ == "__main__":
                         help='your student ID')
     parser.add_argument("-o", "--output", help="Directs the output to a filename of your choice", required=True)
     #TODO:CHANGE BACK TO 10000
-    parser.add_argument("--max", type=int, help="The maximum number of comments to read from each file", default=200)
+    parser.add_argument("--max", type=int, help="The maximum number of comments to read from each file", default=10000)
     args = parser.parse_args()
 
     if (args.max > 200272):
