@@ -30,8 +30,10 @@ def extract1( comment ):
     feats[11] = len(re.findall(r"\/(WDT|WP|WP\$|WRB)\b", comment))
     feats[12] = count_regex("/u/cs401/Wordlists/Slang", comment)
     feats[13] = len(re.findall(r"\b(\S*[A-Z]){3}\/", comment ))
-    #print(feats[13])
 
+    feats[16] = len(re.findall(r"\n\b", comment))
+    feats[14] = 0 if feats[16] == 0 else len(re.findall(r"\S\/\S", comment)) / feats[16]
+    feats[15] = 0 if feats[14] - feats[7] <= 0 else len(re.findall(r"\w\S*\/", comment)) / feats[14] - feats[7]
 
     return feats
 
