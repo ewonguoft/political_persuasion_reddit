@@ -34,8 +34,7 @@ def extract1( comment ):
     feats[10] = len(re.findall(r"\/RB(R|S)?\b", comment))
     feats[11] = len(re.findall(r"\/(WDT|WP|WP\$|WRB)\b", comment))
     feats[12] = count_regex("/u/cs401/Wordlists/Slang", comment)
-    feats[13] = len(re.findall(r"\b(\S*[A-Z]){3}\/", comment ))
-
+    feats[13] = len(re.findall(r"\b(\S*[A-Z]\S*){3,}\/", comment))
     feats[16] = len(re.findall(r"\n\b", comment))
     feats[14] = 0 if feats[16] == 0 else len(re.findall(r"\S\/\S", comment)) / feats[16]
     feats[15] = 0 if feats[14] - feats[7] <= 0 else len(re.findall(r"\w\S*\/", comment)) / feats[14] - feats[7]
@@ -50,7 +49,7 @@ def get_BGL(comment):
         comment : string, the body of a comment (after preprocessing)
 
     Returns:
-        6 values: the 6 calculated values of BGL
+        final_array: the 6 calculated values of BGL
 
     """
     flag_check = False
@@ -73,7 +72,9 @@ def get_BGL(comment):
     IMG = np.array(IMG).astype(np.float)
     FAM = np.array(FAM).astype(np.float)
 
-    return([AoA.mean(), IMG.mean(), FAM.mean(), AoA.std(), IMG.std(), FAM.std()])
+    final_array = [np.mean(AoA), np.mean(IMG), np.mean(FAM), np.std(AoA), np.std(IMG), np.std(FAM)]
+
+    return final_array
 
 
 def get_warringer(comment):
@@ -82,7 +83,7 @@ def get_warringer(comment):
         comment : string, the body of a comment (after preprocessing)
 
     Returns:
-        6 values: the 6 calculated values of warringer
+        final_array: the 6 calculated values of warringer
 
     """
 
@@ -106,7 +107,10 @@ def get_warringer(comment):
     A = np.array(A).astype(np.float)
     D = np.array(D).astype(np.float)
 
-    return([V.mean(), A.mean(), D.mean(), V.std(), A.std(), D.std()])
+    final_array = [np.mean(V), np.mean(A), np.mean(D), np.std(V), np.std(A), np.std(D)]
+
+    return final_array
+
 
 def count_regex( file_name, comment ):
     """
@@ -136,7 +140,7 @@ def main( args ):
     # TODO: your code here
 
 
-    for i in range(5):
+    for i in range(len(data)):
         entry = data[i]
         data_body = entry["body"]
         data_class = entry["cat"]
