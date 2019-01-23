@@ -4,6 +4,10 @@ import argparse
 import os
 import json
 import re
+import pandas as pd
+
+#global vars
+df_bgl = pd.read_csv("/u/cs401/Wordlists/BristolNorms+GilhoolyLogie.csv")
 
 def extract1( comment ):
     ''' This function extracts features from a single comment
@@ -34,8 +38,37 @@ def extract1( comment ):
     feats[16] = len(re.findall(r"\n\b", comment))
     feats[14] = 0 if feats[16] == 0 else len(re.findall(r"\S\/\S", comment)) / feats[16]
     feats[15] = 0 if feats[14] - feats[7] <= 0 else len(re.findall(r"\w\S*\/", comment)) / feats[14] - feats[7]
+    feats[17:23] = get_BGL(comment)
+
 
     return feats
+
+def get_BGL(comment):
+
+    AoA = IMG = FAM = []
+    tokens = re.sub(r"(\S+)\/(\S+)", r"\1", comment).split(" ")
+
+    flag_check = False
+
+    for word in tokens:
+        if word in df_bgl['WORD']:
+            flag_check = True
+            #print("found " + word)
+            index = df_bgl.loc[df_bgl['WORD']==word].index[0]
+            AoA.append(df_bgl.iloc[index]["AoA (100-700)"])
+            IMG.append(df_bgl.iloc[index]["IMG"])
+            FAM.append(df_bgl.iloc[index]["FAM"])
+
+    if flag_check == False:
+        return np.zeros((6,))
+
+    AoA = np.array(AoA)
+    IMG = np.array(IMG)
+    FAM = np.array(FAM)
+
+    return([AoA.mean(), IMG.mean(), FAM.mean(), AoA.std(), IMG.std(), FAM.std()])
+
+
 
 def count_regex( file_name, comment ):
     """
