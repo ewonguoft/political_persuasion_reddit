@@ -73,8 +73,6 @@ def class31(filename):
         y_predict = clf.predict(X_test)
         confuse = confusion_matrix(y_test, y_predict)
         acc = accuracy(confuse)
-        rec = recall(confuse)
-        pre = precision(confuse)
 
         if acc > iBest:
             iBest = i
@@ -82,8 +80,8 @@ def class31(filename):
         result = []
         result.append(i)
         result.append(acc)
-        result.extend(rec)
-        result.extend(pre)
+        result.extend(recall(confuse))
+        result.extend(precision(confuse))
 
         for j in range(confuse.shape[0]):
             result.extend(confuse[j,:])
