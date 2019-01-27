@@ -21,9 +21,9 @@ def extract1( comment ):
     '''
 
     feats = np.zeros((29,))
-    feats[0] = count_regex("/u/cs401/Wordlists/First-person", comment)
-    feats[1] = count_regex("/u/cs401/Wordlists/Second-person", comment)
-    feats[2] = count_regex("/u/cs401/Wordlists/Third-person", comment)
+    feats[0] = count_regex(fp_list, comment)
+    feats[1] = count_regex(sp_list, comment)
+    feats[2] = count_regex(tp_list, comment)
     feats[3] = len(re.findall(r"\/CC\b", comment))
     feats[4] = len(re.findall(r"\/VBD\b", comment))
     feats[5] = len(re.findall(r"\b('ll|will|gonna)\/", comment)) + len(re.findall(r"\bgoing\/\S+ to\/\S+ \S+\/VB\b", comment))
@@ -33,7 +33,7 @@ def extract1( comment ):
     feats[9] = len(re.findall(r"\/NNPS?\b", comment))
     feats[10] = len(re.findall(r"\/RB(R|S)?\b", comment))
     feats[11] = len(re.findall(r"\/(WDT|WP|WP\$|WRB)\b", comment))
-    feats[12] = count_regex("/u/cs401/Wordlists/Slang", comment)
+    feats[12] = count_regex(sl_list, comment)
     feats[13] = len(re.findall(r"\b(\S*[A-Z]\S*){3,}\/", comment))
     feats[16] = len(re.findall(r"\n\b", comment))
     feats[14] = 0 if feats[16] == 0 else len(re.findall(r"\S\/\S", comment)) / feats[16]
@@ -111,26 +111,51 @@ def get_warringer(comment):
 
     return final_array
 
-
-def count_regex( file_name, comment ):
+def gen_regex(file_name):
     """
-    This function returns a regex given a list taken from a file
-
     Parameters:
         file_name : string, filename where we would extract the list to count
-        comment : string, the body of a comment (after preprocessing)
-    Returns:
-        count: num of ocurrences of the words in file_name
     """
+
     with open(file_name) as file:
         regex_list = set(file.read().lower().splitlines())
 
     if ('' in regex_list):
         regex_list.remove('')
 
+    return regex_list
+
+
+def count_regex( regex_list, comment ):
+    """
+    This function returns a regex given a list taken from a file
+
+    Parameters:
+        regex_list :
+        comment : string, the body of a comment (after preprocessing)
+    Returns:
+        count: num of ocurrences of the words in file_name
+    """
     regex = re.findall(r'\b(%s)\/' % '|'.join(regex_list), comment)
 
     return len(regex)
+
+def get_liwc(comment_id, cat):
+    filename = "/u/cs401/A1/feats/" + cat + "_IDs.txt"
+    line_num = 0
+    with open(filename) as myFile:
+        for num, line in enumerate(myFile, 1):
+            if comment_id in line:
+                line_num = num
+                break
+
+    feats = np.load("/u/cs401/A1/feats/"+ cat +"_feats.dat.npy")
+    return feats[line_num]
+
+fp_list = gen_regex("/u/cs401/Wordlists/First-person")
+sp_list = gen_regex("/u/cs401/Wordlists/Second-person")
+tp_list = gen_regex("/u/cs401/Wordlists/Third-person")
+sl_list = gen_regex("/u/cs401/Wordlists/Slang")
 
 def main( args ):
 
@@ -138,7 +163,7 @@ def main( args ):
     feats = np.zeros( (len(data), 173+1))
     features = np.zeros((174,))
     # TODO: your code here
-
+    transform_cat = {"Left": 0, "Center": 1, "Right": 2, "Alt": 3}
 
     for i in range(len(data)):
         entry = data[i]
@@ -147,9 +172,12 @@ def main( args ):
         data_id = entry["id"]
         feats[i][0:29] = extract1(data_body)
         #one for liwc
+        feats[i][29:173] = get_liwc(data_id, data_class)
+        feats[i][-1] = transform_cat[data_class]
         #one for cat to int
         #add to feats
 
+    print("save")
     np.savez_compressed( args.output, feats)
 
 
