@@ -110,7 +110,38 @@ def class32(X_train, X_test, y_train, y_test,iBest):
        X_1k: numPy array, just 1K rows of X_train
        y_1k: numPy array, just 1K rows of y_train
    '''
-    print('TODO Section 3.2')
+
+    sizes = [1000,5000,10000,15000,20000]
+    acc = []
+
+    if iBest == 1:
+        clf = LinearSVC()
+    elif iBest == 2:
+        clf = SVC(gamma=2)
+    elif iBest == 3:
+        clf = RandomForestClassifier(max_depth=5, n_estimators=10)
+    elif iBest == 4:
+        clf = MLPClassifier(alpha=0.05)
+    elif iBest == 5:
+        clf = AdaBoostClassifier()
+
+    for i in sizes:
+        idx = np.random.randint(X_train.shape[0], size=i)
+        X_train_mod = X_train[idx,:]
+        Y_train_mod = y_train[idx]
+
+        clf.fit(X_train_mod,Y_train_mod)
+        y_predict = clf.predict(X_test)
+        confuse = confusion_matrix(y_test, y_predict)
+        acc.append(accuracy(confuse))
+
+        if i == 1000:
+            X_1k = X_train_mod
+            y_1k = Y_train_mod
+
+    with open("a1_3.2.csv", "w") as file:
+        writer = csv.writer(file)
+        writer.writerow(acc)
 
     return (X_1k, y_1k)
 
@@ -138,7 +169,8 @@ def class34( filename, i ):
     print('TODO Section 3.4')
 
 def main(args):
-    res = class31(args.input)
+    res1 = class31(args.input)
+    res2 = class32(*res1)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='section 3')
