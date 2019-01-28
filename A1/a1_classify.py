@@ -113,17 +113,7 @@ def class32(X_train, X_test, y_train, y_test,iBest):
 
     sizes = [1000,5000,10000,15000,20000]
     acc = []
-
-    if iBest == 1:
-        clf = LinearSVC()
-    elif iBest == 2:
-        clf = SVC(gamma=2)
-    elif iBest == 3:
-        clf = RandomForestClassifier(max_depth=5, n_estimators=10)
-    elif iBest == 4:
-        clf = MLPClassifier(alpha=0.05)
-    elif iBest == 5:
-        clf = AdaBoostClassifier()
+    clf = chooseBest(iBest)
 
     for i in sizes:
         idx = np.random.randint(X_train.shape[0], size=i)
@@ -167,6 +157,20 @@ def class34( filename, i ):
        i: int, the index of the supposed best classifier (from task 3.1)
         '''
     print('TODO Section 3.4')
+
+def chooseBest(iBest):
+    if iBest == 1:
+        clf = LinearSVC()
+    elif iBest == 2:
+        clf = SVC(gamma=2)
+    elif iBest == 3:
+        clf = RandomForestClassifier(max_depth=5, n_estimators=10)
+    elif iBest == 4:
+        clf = MLPClassifier(alpha=0.05)
+    elif iBest == 5:
+        clf = AdaBoostClassifier()
+
+    return clf
 
 def main(args):
     res1 = class31(args.input)
