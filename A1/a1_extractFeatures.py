@@ -6,9 +6,6 @@ import json
 import re
 import pandas as pd
 
-#global vars
-df_bgl = pd.read_csv("/u/cs401/Wordlists/BristolNorms+GilhoolyLogie.csv")
-df_war = pd.read_csv("/u/cs401/Wordlists/Ratings_Warriner_et_al.csv")
 
 def extract1( comment ):
     ''' This function extracts features from a single comment
@@ -21,9 +18,9 @@ def extract1( comment ):
     '''
 
     feats = np.zeros((29,))
-    feats[0] = count_regex(fp_list, comment)
-    feats[1] = count_regex(sp_list, comment)
-    feats[2] = count_regex(tp_list, comment)
+    feats[0] = count_regex("/u/cs401/Wordlists/First-person", comment)
+    feats[1] = count_regex("/u/cs401/Wordlists/Second-person", comment)
+    feats[2] = count_regex("/u/cs401/Wordlists/Third-person", comment)
     feats[3] = len(re.findall(r"\/CC\b", comment))
     feats[4] = len(re.findall(r"\/VBD\b", comment))
     feats[5] = len(re.findall(r"\b('ll|will|gonna)\/", comment)) + len(re.findall(r"\bgoing\/\S+ to\/\S+ \S+\/VB\b", comment))
@@ -33,7 +30,7 @@ def extract1( comment ):
     feats[9] = len(re.findall(r"\/NNPS?\b", comment))
     feats[10] = len(re.findall(r"\/RB(R|S)?\b", comment))
     feats[11] = len(re.findall(r"\/(WDT|WP|WP\$|WRB)\b", comment))
-    feats[12] = count_regex(sl_list, comment)
+    feats[12] = count_regex("/u/cs401/Wordlists/Slang", comment)
     feats[13] = len(re.findall(r"\b(\S*[A-Z]\S*){3,}\/", comment))
     feats[16] = len(re.findall(r"\n\b", comment))
     feats[14] = 0 if feats[16] == 0 else len(re.findall(r"\S\/\S", comment)) / feats[16]
@@ -52,6 +49,8 @@ def get_BGL(comment):
         final_array: the 6 calculated values of BGL
 
     """
+
+    df_bgl = pd.read_csv("/u/cs401/Wordlists/BristolNorms+GilhoolyLogie.csv")
     flag_check = False
     AoA = IMG = FAM = []
     tokens = re.sub(r"(\S+)\/(\S+)", r"\1", comment)
@@ -87,6 +86,7 @@ def get_warringer(comment):
 
     """
 
+    df_war = pd.read_csv("/u/cs401/Wordlists/Ratings_Warriner_et_al.csv")
     flag_check = False
     V = A = D = []
     tokens = re.sub(r"(\S+)\/(\S+)", r"\1", comment)
@@ -126,7 +126,7 @@ def gen_regex(file_name):
     return regex_list
 
 
-def count_regex( regex_list, comment ):
+def count_regex( file_name, comment ):
     """
     This function returns a regex given a list taken from a file
 
@@ -136,6 +136,11 @@ def count_regex( regex_list, comment ):
     Returns:
         count: num of ocurrences of the words in file_name
     """
+
+    with open(file_name) as file:
+        regex_list = set(file.read().lower().splitlines())
+    if ('' in regex_list):
+        regex_list.remove('')
     regex = re.findall(r'\b(%s)\/' % '|'.join(regex_list), comment)
 
     return len(regex)
@@ -152,10 +157,6 @@ def get_liwc(comment_id, cat):
     feats = np.load("/u/cs401/A1/feats/"+ cat +"_feats.dat.npy")
     return feats[line_num]
 
-fp_list = gen_regex("/u/cs401/Wordlists/First-person")
-sp_list = gen_regex("/u/cs401/Wordlists/Second-person")
-tp_list = gen_regex("/u/cs401/Wordlists/Third-person")
-sl_list = gen_regex("/u/cs401/Wordlists/Slang")
 
 def main( args ):
 
@@ -177,7 +178,7 @@ def main( args ):
         #one for cat to int
         #add to feats
 
-    print("save")
+    #print("save")
     np.savez_compressed( args.output, feats)
 
 
