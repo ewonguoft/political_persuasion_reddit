@@ -1,5 +1,6 @@
 from sklearn.model_selection import train_test_split
 from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import f_classif
 from sklearn.feature_selection import chi2
 from sklearn.svm import LinearSVC
 from sklearn.svm import SVC
@@ -147,7 +148,61 @@ def class33(X_train, X_test, y_train, y_test, i, X_1k, y_1k):
        X_1k: numPy array, just 1K rows of X_train (from task 3.2)
        y_1k: numPy array, just 1K rows of y_train (from task 3.2)
     '''
-    print('TODO Section 3.3')
+
+    features = [5,10,20,30,40,50]
+    all_results = []
+    X_5_train = []
+    X_5_test = []
+
+    for feat in features:
+        #32k
+        selector = SelectKBest(f_classif,k=feat)
+        X_new = selector.fit_transform(X_train, y_train)
+        pp = selector.pvalues_
+
+        #1k
+        selector_1k = SelectKBest(f_classif, k=feat)
+        X_new_1k = selector_1k.fit_transform(X_1k, y_1k)
+
+        index = selector.get_support(indices=True)
+        temp = []
+        temp.append(feat)
+        for k in range(0,len(index)):
+            temp.append(pp[index[k]])
+
+        all_results.append(temp)
+
+        if feat == 5:
+            X_5_train = X_new
+            X_5_test = X_test[:,index]
+            print(X_5_test.shape)
+            print(X_5_train.shape)
+            X_5_train_1k = X_new_1k
+            print(X_5_train_1k.shape)
+
+    #32k
+    clf = chooseBest(i)
+    clf.fit(X_5_train, y_train)
+    y_predict = clf.predict(X_5_test)
+    confuse = confusion_matrix(y_test, y_predict)
+    acc = accuracy(confuse)
+
+    #1k
+    clf_1k = chooseBest(i)
+    clf_1k.fit(X_5_train_1k, y_1k)
+    y_predict_1k = clf_1k.predict(X_5_test)
+    confuse_1k = confusion_matrix(y_test, y_predict_1k)
+    acc_1k = accuracy(confuse_1k)
+
+    all_results.append([acc_1k, acc])
+
+    with open("a1_3.3.csv", "w") as file:
+        writer = csv.writer(file)
+        for row in all_results:
+            writer.writerow(row)
+
+
+
 
 def class34( filename, i ):
     ''' This function performs experiment 3.4
@@ -173,8 +228,9 @@ def chooseBest(iBest):
     return clf
 
 def main(args):
-    res1 = class31(args.input)
-    res2 = class32(*res1)
+    X_train, X_test, y_train, y_test,iBest = class31(args.input)
+    X_1k, y_1k = class32(X_train, X_test, y_train, y_test,iBest)
+    res3 = class33(X_train, X_test, y_train, y_test, iBest, X_1k, y_1k)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='section 3')
