@@ -265,10 +265,10 @@ def chooseBest(iBest):
     return clf
 
 def main(args):
-    #X_train, X_test, y_train, y_test,iBest = class31(args.input)
-    #X_1k, y_1k = class32(X_train, X_test, y_train, y_test,iBest)
-    #res3 = class33(X_train, X_test, y_train, y_test, iBest, X_1k, y_1k)
-    class34(args.input,5)
+    X_train, X_test, y_train, y_test,iBest = class31(args.input)
+    X_1k, y_1k = class32(X_train, X_test, y_train, y_test,iBest)
+    class33(X_train, X_test, y_train, y_test, iBest, X_1k, y_1k)
+    class34(args.input,iBest)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='section 3')
