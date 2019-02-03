@@ -8,14 +8,14 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import KFold
+from scipy import stats
 
 import numpy as np
 import argparse
 import sys
 import os
 import csv
-
-
 
 def accuracy( C ):
     ''' Compute accuracy given Numpy array confusion matrix C. Returns a floating point value '''
@@ -136,6 +136,7 @@ def class32(X_train, X_test, y_train, y_test,iBest):
 
     return (X_1k, y_1k)
 
+
 def class33(X_train, X_test, y_train, y_test, i, X_1k, y_1k):
     ''' This function performs experiment 3.3
 
@@ -164,7 +165,12 @@ def class33(X_train, X_test, y_train, y_test, i, X_1k, y_1k):
         selector_1k = SelectKBest(f_classif, k=feat)
         X_new_1k = selector_1k.fit_transform(X_1k, y_1k)
 
+        #get index num to get the top features index
         index = selector.get_support(indices=True)
+        #print(index)
+        index_1k = selector_1k.get_support(indices=True)
+        #print(index_1k)
+
         temp = []
         temp.append(feat)
         for k in range(0,len(index)):
@@ -175,10 +181,10 @@ def class33(X_train, X_test, y_train, y_test, i, X_1k, y_1k):
         if feat == 5:
             X_5_train = X_new
             X_5_test = X_test[:,index]
-            print(X_5_test.shape)
-            print(X_5_train.shape)
+            #print(X_5_test.shape)
+            #print(X_5_train.shape)
             X_5_train_1k = X_new_1k
-            print(X_5_train_1k.shape)
+            #print(X_5_train_1k.shape)
 
     #32k
     clf = chooseBest(i)
@@ -202,8 +208,6 @@ def class33(X_train, X_test, y_train, y_test, i, X_1k, y_1k):
             writer.writerow(row)
 
 
-
-
 def class34( filename, i ):
     ''' This function performs experiment 3.4
 
@@ -211,7 +215,40 @@ def class34( filename, i ):
        filename : string, the name of the npz file from Task 2
        i: int, the index of the supposed best classifier (from task 3.1)
         '''
-    print('TODO Section 3.4')
+    all_results = []
+    feats = np.load(filename)
+    feats = feats[feats.files[0]]
+    y = feats[:,-1]
+    X = np.delete(feats, -1, axis=1)
+
+    for j in range(1,6):
+        clf = chooseBest(j)
+        accs = []
+        kfolds = KFold(n_splits=5, shuffle=True)
+        for train_index, test_index in kfolds.split(X):
+            X_train, X_test = X[train_index], X[test_index]
+            y_train, y_test = y[train_index], y[test_index]
+            clf.fit(X_train, y_train)
+            y_predict = clf.predict(X_test)
+            confuse = confusion_matrix(y_test, y_predict)
+            accs.append(accuracy(confuse))
+
+        all_results.append(accs)
+
+    p_val = []
+    a = np.array(all_results[i-1])
+
+    for k in range(len(a)):
+        if k != (i-1):
+            b = np.array(all_results[k])
+            p_val.append(stats.ttest_rel(a,b))
+
+    all_results.append(p_val)
+    with open("a1_3.4.csv", "w") as file:
+        writer = csv.writer(file)
+        for row in all_results:
+            writer.writerow(row)
+
 
 def chooseBest(iBest):
     if iBest == 1:
@@ -228,9 +265,10 @@ def chooseBest(iBest):
     return clf
 
 def main(args):
-    X_train, X_test, y_train, y_test,iBest = class31(args.input)
-    X_1k, y_1k = class32(X_train, X_test, y_train, y_test,iBest)
-    res3 = class33(X_train, X_test, y_train, y_test, iBest, X_1k, y_1k)
+    #X_train, X_test, y_train, y_test,iBest = class31(args.input)
+    #X_1k, y_1k = class32(X_train, X_test, y_train, y_test,iBest)
+    #res3 = class33(X_train, X_test, y_train, y_test, iBest, X_1k, y_1k)
+    class34(args.input,5)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='section 3')
