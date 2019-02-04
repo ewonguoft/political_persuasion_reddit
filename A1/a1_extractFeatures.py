@@ -174,9 +174,8 @@ def main( args ):
         feats[i][0:29] = extract1(data_body)
         #one for liwc
         feats[i][29:173] = get_liwc(data_id, data_class)
-        feats[i][-1] = transform_cat[data_class]
         #one for cat to int
-        #add to feats
+        feats[i][-1] = transform_cat[data_class]
 
     #print("save")
     np.savez_compressed( args.output, feats)
