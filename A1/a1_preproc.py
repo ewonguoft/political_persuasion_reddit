@@ -9,17 +9,6 @@ import string
 
 indir = '/u/cs401/A1/data/';
 
-with open("/u/cs401/Wordlists/abbrev.english") as file:
-    abbreviation_list = set(file.read().lower().splitlines())
-abbreviation_list.add("i.e.")
-abbreviation_list.add("e.g.")
-
-
-with open("/u/cs401/Wordlists/StopWords") as file:
-    stopword_list = set(file.read().lower().splitlines())
-
-ending_punctuation_list = {".", "!", "?"}
-
 nlp = spacy.load('en', disable=['parser', 'ner'])
 
 def preproc1( comment , steps=range(1,11)):
@@ -44,6 +33,11 @@ def preproc1( comment , steps=range(1,11)):
         #matches http(s):// or www as required
         modComm = re.sub(r"((http[s]?:\/\/)|(www\.))+\S*","",modComm)
     if 4 in steps:
+        with open("/u/cs401/Wordlists/abbrev.english") as file:
+            abbreviation_list = set(file.read().lower().splitlines())
+        abbreviation_list.add("i.e.")
+        abbreviation_list.add("e.g.")
+
         tokens = re.split("\s+", modComm)
         tokens_mod = []
 
@@ -73,7 +67,7 @@ def preproc1( comment , steps=range(1,11)):
         modComm = " ".join(tokens_mod)
     if 5 in steps:
         #deal with common case given clitics list
-        modComm = re.sub(r"(\w)('d|n't|'ve|'re|'ll|'m|'s)", r"\1 \2 ", modComm, flags=re.IGNORECASE)
+        modComm = re.sub(r"(\w)('d|n't|'ve|'re|'ll|'m|'s)", r"\1 \2", modComm, flags=re.IGNORECASE)
 
         #deal with special cases
         modComm = re.sub(r"s' ", r"s ' ", modComm, flags=re.IGNORECASE)
@@ -81,7 +75,6 @@ def preproc1( comment , steps=range(1,11)):
 
     if 6 in steps:
         utt = nlp(modComm)
-
         tokens_mod = []
         for word in utt:
             tagged_word = "{0}/{1}".format(word, word.tag_)
@@ -91,41 +84,17 @@ def preproc1( comment , steps=range(1,11)):
 
     if 7 in steps:
 
-        tokens = re.split("\s+", modComm)
-        tokens_mod = []
-
-        #split tokens and only add back the ones that aren't in stoplist
-        for word in tokens:
-            index = word.rfind("/")
-            if(word[:index] not in stopword_list):
-                tokens_mod.append(word)
-
-        modComm = " ".join(tokens_mod)
+        modComm = re.sub(r"(\S+)\/(\S+)", rm_stopwords, modComm)
 
     if 8 in steps:
-        tokens = re.split("\s+", modComm)
-        tokens_mod = []
 
-        #get the token and tag and lemmatize it
-        #if it doesn't match requirements, use old version
-        for word in tokens:
-            index = word.rfind("/")
-            token = word[:index]
-            tag = word[index:]
-            utt = nlp(token)
-
-            for i in utt:
-                if(token[0] != "-" and i.lemma_[0] == "-"):
-                    tokens_mod.append(word)
-                else:
-                    tokens_mod.append("{0}{1}".format(i.lemma_, tag))
-
-        modComm = " ".join(tokens_mod)
+        modComm = lemmatize(modComm)
 
     if 9 in steps:
         #using sentence boundary as described in 4.2.4
         tokens = re.split("\s+", modComm)
         tokens_mod = []
+        ending_punctuation_list = {".", "!", "?"}
 
         for i in range(len(tokens)):
             index = tokens[i].rfind("/")
@@ -151,6 +120,30 @@ def preproc1( comment , steps=range(1,11)):
         modComm = re.sub(r"(\S+)\/(\S+)", lambda pattern: pattern.group(1).lower() + "/" + pattern.group(2), modComm)
 
     return modComm
+
+def rm_stopwords(p):
+    with open("/u/cs401/Wordlists/StopWords") as file:
+        stopword_list = set(file.read().lower().splitlines())
+
+    if p.group(1).strip().lower() in stopword_list:
+        return ""
+    else:
+        return p.group(0)
+
+def lemmatize(l):
+    l = re.sub(r"(\S+)\/(\S+)", r"\1", l)
+    l = l.strip()
+    l = re.sub(r"\s+", " ", l)
+    doc = nlp(l)
+    result = ""
+    for word in doc:
+        if(word.lemma_.startswith("-")):
+            result = result+word.text+"/"+word.tag_+" "
+        else:
+            result = result+word.lemma_+"/"+word.tag_+" "
+
+    return result
+
 
 def main( args ):
 
@@ -205,7 +198,7 @@ if __name__ == "__main__":
                         help='your student ID')
     parser.add_argument("-o", "--output", help="Directs the output to a filename of your choice", required=True)
     #TODO:CHANGE BACK TO 10000
-    parser.add_argument("--max", type=int, help="The maximum number of comments to read from each file", default=100)
+    parser.add_argument("--max", type=int, help="The maximum number of comments to read from each file", default=10000)
     args = parser.parse_args()
 
     if (args.max > 200272):
