@@ -102,7 +102,7 @@ def preproc1( comment , steps=range(1,11)):
             if not token:
                 continue
 
-            if(i<len(tokens)-1):
+            if(i+1<len(tokens)-1):
                 index_next = tokens[i+1].rfind("/")
                 token_next = tokens[i+1][:index_next]
             #known abreviation not sentence
