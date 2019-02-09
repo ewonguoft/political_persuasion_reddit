@@ -122,6 +122,14 @@ def preproc1( comment , steps=range(1,11)):
     return modComm
 
 def rm_stopwords(p):
+    """
+    Helper function to remove stopwords
+
+    Parameters:
+        p : The regex pattern
+    Returns:
+        The appropriate string (removed or not)
+    """
     with open("/u/cs401/Wordlists/StopWords") as file:
         stopword_list = set(file.read().lower().splitlines())
 
@@ -131,6 +139,14 @@ def rm_stopwords(p):
         return p.group(0)
 
 def lemmatize(l):
+    """
+    Helper function to lemmatize words
+
+    Parameters:
+        l : The line that we are processing
+    Returns:
+        result : the processed line that has been lemmatized
+    """
     l = re.sub(r"(\S+)\/(\S+)", r"\1", l)
     l = l.strip()
     l = re.sub(r"\s+", " ", l)

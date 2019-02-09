@@ -146,6 +146,15 @@ def count_regex( file_name, comment ):
     return len(regex)
 
 def get_liwc(comment_id, cat):
+    """
+    This function gets all the liwc/receptiviti features
+
+    Parameters:
+        comment_id : the unique comment identifier
+        cat : the category of the comment
+    Returns:
+        feats[line_num] : the appropriate row from the appropriate category
+    """
     filename = "/u/cs401/A1/feats/" + cat + "_IDs.txt"
     line_num = 0
     with open(filename) as myFile:

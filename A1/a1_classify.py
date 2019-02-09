@@ -154,7 +154,7 @@ def class33(X_train, X_test, y_train, y_test, i, X_1k, y_1k):
     all_results = []
     X_5_train = []
     X_5_test = []
-
+    part3 = []
     for feat in features:
         #32k
         selector = SelectKBest(f_classif,k=feat)
@@ -167,9 +167,10 @@ def class33(X_train, X_test, y_train, y_test, i, X_1k, y_1k):
 
         #get index num to get the top features index
         index = selector.get_support(indices=True)
-        #print(index)
         index_1k = selector_1k.get_support(indices=True)
-        #print(index_1k)
+
+        part3.append(index_1k)
+        part3.append(index)
 
         temp = []
         temp.append(feat)
@@ -205,6 +206,11 @@ def class33(X_train, X_test, y_train, y_test, i, X_1k, y_1k):
     with open("a1_3.3.csv", "w") as file:
         writer = csv.writer(file)
         for row in all_results:
+            writer.writerow(row)
+
+    with open("feat_names.csv", "w") as file:
+        writer = csv.writer(file)
+        for row in part3:
             writer.writerow(row)
 
 
@@ -251,6 +257,13 @@ def class34( filename, i ):
 
 
 def chooseBest(iBest):
+    """
+    This function returns the appropriate classifier
+    Parameters:
+        iBest : number between 1-5 indicating the classifier
+    Returns:
+        clf : the correct classifier
+    """
     if iBest == 1:
         clf = LinearSVC()
     elif iBest == 2:
