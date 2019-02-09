@@ -1,1 +1,2 @@
 0.400625,0.42775,0.412375,0.43025,0.454625
+The accuracy seems to increase as the number of training samples increases. This could be because as you increase the number of training samples, more patterns are being learned about the data that are applicable to the test data set. This is expected because there is more data to learn from.
