@@ -74,15 +74,14 @@ def class31(filename):
         y_predict = clf.predict(X_test)
         confuse = confusion_matrix(y_test, y_predict)
         acc = accuracy(confuse)
-
-        if acc > iBest:
-            iBest = i
-
         result = []
         result.append(i)
         result.append(acc)
         result.extend(recall(confuse))
         result.extend(precision(confuse))
+        
+        if acc > iBest:
+            iBest = i
 
         for j in range(confuse.shape[0]):
             result.extend(confuse[j,:])

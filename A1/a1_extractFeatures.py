@@ -95,10 +95,10 @@ def get_warringer(comment):
     for word in tokens:
         if word in df_war['Word']:
             flag_check = True
-            index = df_bgl.loc[df_bgl['Word']==word].index[0]
-            AoA.append(df_bgl.iloc[index]["V.Mean.Sum"])
-            IMG.append(df_bgl.iloc[index]["A.Mean.Sum"])
-            FAM.append(df_bgl.iloc[index]["D.Mean.Sum"])
+            index = df_war.loc[df_war['Word']==word].index[0]
+            V.append(df_war.iloc[index]["V.Mean.Sum"])
+            A.append(df_war.iloc[index]["A.Mean.Sum"])
+            D.append(df_war.iloc[index]["D.Mean.Sum"])
 
     if flag_check == False:
         return np.zeros((6,))
