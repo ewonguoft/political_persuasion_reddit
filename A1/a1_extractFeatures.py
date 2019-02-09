@@ -6,6 +6,9 @@ import json
 import re
 import pandas as pd
 
+df_war_1000625433 = pd.read_csv("/u/cs401/Wordlists/Ratings_Warriner_et_al.csv")
+df_bgl_1000625433 = pd.read_csv("/u/cs401/Wordlists/BristolNorms+GilhoolyLogie.csv")
+
 
 def extract1( comment ):
     ''' This function extracts features from a single comment
@@ -18,9 +21,9 @@ def extract1( comment ):
     '''
 
     feats = np.zeros((29,))
-    feats[0] = count_regex("/u/cs401/Wordlists/First-person", comment)
-    feats[1] = count_regex("/u/cs401/Wordlists/Second-person", comment)
-    feats[2] = count_regex("/u/cs401/Wordlists/Third-person", comment)
+    feats[0] = count_regex(fp_regex_1000625433, comment)
+    feats[1] = count_regex(sp_regex_1000625433, comment)
+    feats[2] = count_regex(tp_regex_1000625433, comment)
     feats[3] = len(re.findall(r"\/CC\b", comment))
     feats[4] = len(re.findall(r"\/VBD\b", comment))
     feats[5] = len(re.findall(r"\b('ll|will|gonna)\/", comment)) + len(re.findall(r"\bgoing\/\S+ to\/\S+ \S+\/VB\b", comment))
@@ -30,7 +33,7 @@ def extract1( comment ):
     feats[9] = len(re.findall(r"\/NNPS?\b", comment))
     feats[10] = len(re.findall(r"\/RB(R|S)?\b", comment))
     feats[11] = len(re.findall(r"\/(WDT|WP|WP\$|WRB)\b", comment))
-    feats[12] = count_regex("/u/cs401/Wordlists/Slang", comment)
+    feats[12] = count_regex(slang_regex_1000625433, comment)
     feats[13] = len(re.findall(r"\b(\S*[A-Z]\S*){3,}\/", comment))
     feats[16] = len(re.findall(r"\n\b", comment))
     feats[14] = 0 if feats[16] == 0 else len(re.findall(r"\S\/\S", comment)) / feats[16]
@@ -50,19 +53,18 @@ def get_BGL(comment):
 
     """
 
-    df_bgl = pd.read_csv("/u/cs401/Wordlists/BristolNorms+GilhoolyLogie.csv")
     flag_check = False
     AoA = IMG = FAM = []
     tokens = re.sub(r"(\S+)\/(\S+)", r"\1", comment)
     tokens = tokens.split(" ")
 
     for word in tokens:
-        if word in df_bgl['WORD']:
+        if word in df_bgl_1000625433['WORD']:
             flag_check = True
-            index = df_bgl.loc[df_bgl['WORD']==word].index[0]
-            AoA.append(df_bgl.iloc[index]["AoA (100-700)"])
-            IMG.append(df_bgl.iloc[index]["IMG"])
-            FAM.append(df_bgl.iloc[index]["FAM"])
+            index = df_bgl_1000625433.loc[df_bgl_1000625433['WORD']==word].index[0]
+            AoA.append(df_bgl_1000625433.iloc[index]["AoA (100-700)"])
+            IMG.append(df_bgl_1000625433.iloc[index]["IMG"])
+            FAM.append(df_bgl_1000625433.iloc[index]["FAM"])
 
     if flag_check == False:
         return np.zeros((6,))
@@ -86,19 +88,18 @@ def get_warringer(comment):
 
     """
 
-    df_war = pd.read_csv("/u/cs401/Wordlists/Ratings_Warriner_et_al.csv")
     flag_check = False
     V = A = D = []
     tokens = re.sub(r"(\S+)\/(\S+)", r"\1", comment)
     tokens = tokens.split(" ")
 
     for word in tokens:
-        if word in df_war['Word']:
+        if word in df_war_1000625433['Word']:
             flag_check = True
-            index = df_war.loc[df_war['Word']==word].index[0]
-            V.append(df_war.iloc[index]["V.Mean.Sum"])
-            A.append(df_war.iloc[index]["A.Mean.Sum"])
-            D.append(df_war.iloc[index]["D.Mean.Sum"])
+            index = df_war_1000625433.loc[df_war_1000625433['Word']==word].index[0]
+            V.append(df_war_1000625433.iloc[index]["V.Mean.Sum"])
+            A.append(df_war_1000625433.iloc[index]["A.Mean.Sum"])
+            D.append(df_war_1000625433.iloc[index]["D.Mean.Sum"])
 
     if flag_check == False:
         return np.zeros((6,))
@@ -112,21 +113,34 @@ def get_warringer(comment):
     return final_array
 
 
-def count_regex( file_name, comment ):
+def gen_regex(file_name):
     """
-    This function returns a regex given a list taken from a file
-
     Parameters:
-        regex_list :
-        comment : string, the body of a comment (after preprocessing)
-    Returns:
-        count: num of ocurrences of the words in file_name
+        file_name : string, filename where we would extract the list to count
     """
 
     with open(file_name) as file:
         regex_list = set(file.read().lower().splitlines())
+
     if ('' in regex_list):
         regex_list.remove('')
+
+    return regex_list
+
+fp_regex_1000625433 = gen_regex("/u/cs401/Wordlists/First-person")
+sp_regex_1000625433 = gen_regex("/u/cs401/Wordlists/Second-person")
+tp_regex_1000625433 = gen_regex("/u/cs401/Wordlists/Third-person")
+slang_regex_1000625433 = gen_regex("/u/cs401/Wordlists/Slang")
+
+def count_regex( regex_list, comment ):
+    """
+    This function returns a regex given a list taken from a file
+
+    Parameters:
+        comment : string, the body of a comment (after preprocessing)
+    Returns:
+        count: num of ocurrences of the words in file_name
+    """
     regex = re.findall(r'\b(%s)\/' % '|'.join(regex_list), comment)
 
     return len(regex)
