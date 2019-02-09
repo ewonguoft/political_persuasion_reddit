@@ -179,8 +179,8 @@ def main( args ):
 
             while count < args.max:
 
-                print("starting point: "+str(start))
-                print("ending point: " +str(end))
+                #print("starting point: "+str(start))
+                #print("ending point: " +str(end))
                 #read those lines with something like `j = json.loads(line)`
                 for i in range(start, end):
                     line = data[i]
@@ -199,9 +199,9 @@ def main( args ):
                 if count<args.max:
                     start = 0
                     end = args.max - count
-                    print("WRAPPED")
+                    #print("WRAPPED")
 
-            print("total records: " +str(len(allOutput)))
+            #print("total records: " +str(len(allOutput)))
 
     fout = open(args.output, 'w')
     fout.write(json.dumps(allOutput))
@@ -213,7 +213,7 @@ if __name__ == "__main__":
     parser.add_argument('ID', metavar='N', type=int, nargs=1,
                         help='your student ID')
     parser.add_argument("-o", "--output", help="Directs the output to a filename of your choice", required=True)
-    #TODO:CHANGE BACK TO 10000
+    
     parser.add_argument("--max", type=int, help="The maximum number of comments to read from each file", default=10000)
     args = parser.parse_args()
 

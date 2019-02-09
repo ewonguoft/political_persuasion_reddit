@@ -169,6 +169,7 @@ def class33(X_train, X_test, y_train, y_test, i, X_1k, y_1k):
         index = selector.get_support(indices=True)
         index_1k = selector_1k.get_support(indices=True)
 
+        #adding index numbers to get the feature names
         part3.append(index_1k)
         part3.append(index)
 
@@ -208,10 +209,11 @@ def class33(X_train, X_test, y_train, y_test, i, X_1k, y_1k):
         for row in all_results:
             writer.writerow(row)
 
-    with open("feat_names.csv", "w") as file:
-        writer = csv.writer(file)
-        for row in part3:
-            writer.writerow(row)
+    #write index #s to feats_name.csv
+#    with open("feat_names.csv", "w") as file:
+#        writer = csv.writer(file)
+#        for row in part3:
+#            writer.writerow(row)
 
 
 def class34( filename, i ):
@@ -221,12 +223,12 @@ def class34( filename, i ):
        filename : string, the name of the npz file from Task 2
        i: int, the index of the supposed best classifier (from task 3.1)
         '''
-    all_results = []
     feats = np.load(filename)
     feats = feats[feats.files[0]]
     y = feats[:,-1]
     X = np.delete(feats, -1, axis=1)
-
+    all_results = []
+    
     for j in range(1,6):
         clf = chooseBest(j)
         accs = []

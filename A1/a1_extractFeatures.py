@@ -111,20 +111,6 @@ def get_warringer(comment):
 
     return final_array
 
-def gen_regex(file_name):
-    """
-    Parameters:
-        file_name : string, filename where we would extract the list to count
-    """
-
-    with open(file_name) as file:
-        regex_list = set(file.read().lower().splitlines())
-
-    if ('' in regex_list):
-        regex_list.remove('')
-
-    return regex_list
-
 
 def count_regex( file_name, comment ):
     """
